@@ -1,0 +1,9 @@
+---
+ColumnLimit: 100
+ContinuationIndentWidth: 2
+AlignAfterOpenBracket: AlwaysBreak
+BinPackArguments: true
+BinPackParameters: true
+AlignTrailingComments: Always
+AllowShortCaseLabelsOnASingleLine: true
+...
