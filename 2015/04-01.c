@@ -3,14 +3,7 @@
 #include "04-common.c"
 
 I main() {
-  C *input = NULL;
-  Z inputSize = 0;
-
-  if (fgetline(stdin, &input, &inputSize) == 0)
-    die("input error");
-  inputSize = trim(input);
-
+  C *input = readInput(stdin);
   printf("%d\n", findHash(input, "00000"));
-
   input = alloc(input, 0);
 }

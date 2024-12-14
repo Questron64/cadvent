@@ -59,6 +59,10 @@ int cmpi(CV *a, CV *b) {
 }
 
 Z fgetline(FILE *f, C **buf, Z *bufSize) {
+  Z dummyBufSize = 0;
+  if(!bufSize)
+    bufSize = &dummyBufSize;
+
   if (*bufSize == 0) {
     *bufSize = 512;
     *buf = malloc(*bufSize);

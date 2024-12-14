@@ -18,6 +18,10 @@
 #define	MD5_DIGEST_LENGTH		16
 #define	MD5_DIGEST_STRING_LENGTH	(MD5_DIGEST_LENGTH * 2 + 1)
 
+// High level API
+void MD5StringHex(const char *string, char output[MD5_DIGEST_STRING_LENGTH]);
+
+// Low level API
 typedef struct MD5Context {
 	u_int32_t state[4];			/* state */
 	u_int64_t count;			/* number of bits, mod 2^64 */
@@ -256,4 +260,19 @@ MD5Transform(u_int32_t state[4], const u_int8_t block[MD5_BLOCK_LENGTH])
 	state[1] += b;
 	state[2] += c;
 	state[3] += d;
+}
+
+void MD5StringHex(const char *string, char output[MD5_DIGEST_STRING_LENGTH]) {
+  MD5_CTX md5;
+  MD5Init(&md5);
+  MD5Update(&md5, (const u_int8_t *)string, strlen(string));
+
+  u_int8_t hash[MD5_DIGEST_LENGTH];
+  MD5Final(hash, &md5);
+
+  const char *hex = "0123456789ABCDEF";
+  for(size_t i = 0; i < MD5_DIGEST_LENGTH; i++) {
+    output[i * 2] = hex[hash[i] >> 4 & 0xF];
+    output[i * 2 + 1] = hex[hash[i] & 0xF];
+  }
 }
