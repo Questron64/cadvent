@@ -65,9 +65,7 @@ Z fgetline(FILE *f, C **buf, Z *bufSize) {
 
   if (*bufSize == 0) {
     *bufSize = 512;
-    *buf = malloc(*bufSize);
-    if (!*buf)
-      die("memory error");
+    *buf = alloc(*buf, *bufSize);
   }
 
   Z idx = 0;
@@ -92,10 +90,7 @@ Z fgetline(FILE *f, C **buf, Z *bufSize) {
     // again
     if (idx == *bufSize - 1) {
       *bufSize *= 2;
-      C *new = realloc(*buf, *bufSize);
-      if (!new)
-        die("memory error");
-      *buf = new;
+      *buf = alloc(*buf, *bufSize);
     }
   }
 }

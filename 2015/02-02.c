@@ -13,4 +13,6 @@ I main() {
               boxes[i][0] * boxes[i][1] * boxes[i][2];
   }
   printf("%d\n", ribbon);
+
+  boxes = alloc(boxes, 0);
 }

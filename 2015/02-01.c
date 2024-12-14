@@ -14,4 +14,6 @@ I main() {
              boxes[i][2] * boxes[i][0] * 2;
   }
   printf("%d\n", paper);
+
+  boxes = alloc(boxes, 0);
 }
