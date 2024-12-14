@@ -2,16 +2,23 @@
 #include <ctype.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+typedef bool B;
 typedef char C;
 typedef const char CC;
+typedef unsigned char UC;
+typedef unsigned const char UCC;
 typedef size_t Z;
 typedef const size_t CZ;
 typedef int I;
+typedef unsigned U;
+typedef unsigned int UI;
 typedef const int CI;
+typedef unsigned const int UCI;
 typedef void V;
 typedef const void CV;
 
@@ -40,19 +47,49 @@ V *alloc(V *ptr, Z size) {
   }
 }
 
-int mini(int a, int b) {
+I popcount(U x) {
+#if defined(__GNUC__) || defined(__clang__)
+  return __builtin_popcount(x);
+#else
+  I count = 0;
+  for(U m = 1; m; m <<= 1)
+    count += !!(x & m);
+  return count;
+#endif
+}
+
+B startswith(CC *string, CC *prefix) {
+  return !strncmp(string, prefix, strlen(prefix));
+}
+
+B startswith_any(CC *string, ...) {
+  va_list args;
+  va_start(args, string);
+  for(CC *prefix; prefix = va_arg(args, CC*), prefix;) {
+    if(startswith(string, prefix)) {
+      va_end(args);
+      return true;
+    }
+  }
+  va_end(args);
+  return false;
+}
+
+I isvowel(I c) { return !!strchr("aeiouAEIOU", c); }
+
+I mini(I a, I b) {
   if (a < b)
     return a;
   return b;
 }
 
-V swapi(int *a, int *b) {
-  int c = *a;
+V swapi(I *a, I *b) {
+  I c = *a;
   *a = *b;
   *b = c;
 }
 
-int cmpi(CV *a, CV *b) {
+I cmpi(CV *a, CV *b) {
   CI *a_ = a;
   CI *b_ = b;
   return *a_ - *b_;
@@ -60,7 +97,7 @@ int cmpi(CV *a, CV *b) {
 
 Z fgetline(FILE *f, C **buf, Z *bufSize) {
   Z dummyBufSize = 0;
-  if(!bufSize)
+  if (!bufSize)
     bufSize = &dummyBufSize;
 
   if (*bufSize == 0) {
@@ -97,7 +134,7 @@ Z fgetline(FILE *f, C **buf, Z *bufSize) {
 
 Z trim(C *str) {
   Z i = strlen(str);
-  while(i > 1 && isspace(str[i - 1])) {
+  while (i > 1 && isspace(str[i - 1])) {
     str[i - 1] = 0;
     i--;
   }
