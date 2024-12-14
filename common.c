@@ -1,14 +1,41 @@
+// A smorgasbord of utility functions, type names and headers
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-_Noreturn void die(const char *fmt, ...) {
+typedef char C;
+typedef const char CC;
+typedef size_t Z;
+typedef const size_t CZ;
+typedef int I;
+typedef const int CI;
+typedef void V;
+typedef const void CV;
+
+_Noreturn V die(CC *fmt, ...) {
   va_list args;
   va_start(args, fmt);
   vfprintf(stderr, fmt, args);
   va_end(args);
   exit(EXIT_FAILURE);
+}
+
+V *alloc(V *ptr, Z size) {
+  if (size == 0) {
+    free(ptr);
+    return NULL;
+  } else if (ptr == NULL) {
+    V *new = calloc(1, size);
+    if (!new)
+      die("memory error");
+    return new;
+  } else {
+    V *new = realloc(ptr, size);
+    if (!new)
+      die("memory error");
+    return new;
+  }
 }
 
 int mini(int a, int b) {
@@ -17,19 +44,19 @@ int mini(int a, int b) {
   return b;
 }
 
-void swapi(int *a, int *b) {
+V swapi(int *a, int *b) {
   int c = *a;
   *a = *b;
   *b = c;
 }
 
-int cmpi(const void *a, const void *b) {
-  const int *a_ = a;
-  const int *b_ = b;
+int cmpi(CV *a, CV *b) {
+  CI *a_ = a;
+  CI *b_ = b;
   return *a_ - *b_;
 }
 
-size_t fgetline(FILE *f, char **buf, size_t *bufSize) {
+Z fgetline(FILE *f, C **buf, Z *bufSize) {
   if (*bufSize == 0) {
     *bufSize = 512;
     *buf = malloc(*bufSize);
@@ -37,9 +64,9 @@ size_t fgetline(FILE *f, char **buf, size_t *bufSize) {
       die("memory error");
   }
 
-  size_t idx = 0;
+  Z idx = 0;
   while (1) {
-    char *result = fgets(*buf + idx, *bufSize - idx, f);
+    C *result = fgets(*buf + idx, *bufSize - idx, f);
     if (!result)
       return idx;
 
@@ -59,7 +86,7 @@ size_t fgetline(FILE *f, char **buf, size_t *bufSize) {
     // again
     if (idx == *bufSize - 1) {
       *bufSize *= 2;
-      char *new = realloc(*buf, *bufSize);
+      C *new = realloc(*buf, *bufSize);
       if (!new)
         die("memory error");
       *buf = new;
