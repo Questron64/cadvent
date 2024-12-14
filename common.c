@@ -1,4 +1,6 @@
 // A smorgasbord of utility functions, type names and headers
+#include <ctype.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,4 +94,13 @@ Z fgetline(FILE *f, C **buf, Z *bufSize) {
       *buf = new;
     }
   }
+}
+
+Z trim(C *str) {
+  Z i = strlen(str);
+  while(i > 1 && isspace(str[i - 1])) {
+    str[i - 1] = 0;
+    i--;
+  }
+  return i;
 }
