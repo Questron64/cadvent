@@ -40,29 +40,29 @@ Value str_to_value(CC str[6]) {
   return (Value){NUMBER, 0};
 }
 
-V insertNode(CC a[6], I type, CC b[6], CC c[6]) {
+V insert_node(CC a[6], I type, CC b[6], CC c[6]) {
   net[str_to_idx(c)] = (Node){type, {str_to_value(a), str_to_value(b)}};
 }
 
-V loadNet() {
+V load_net() {
   C *line = NULL;
-  Z lineSize = 0;
+  Z line_size = 0;
 
-  while (fgetline(stdin, &line, &lineSize)) {
+  while (fgetline(stdin, &line, &line_size)) {
     C a[6], b[6], c[6];
 
     if (sscanf(line, "%5s -> %5s", a, b) == 2)
-      insertNode(a, VALUE, 0, b);
+      insert_node(a, VALUE, 0, b);
     else if (sscanf(line, "NOT %5s -> %5s", a, b) == 2)
-      insertNode(a, NOT, 0, b);
+      insert_node(a, NOT, 0, b);
     else if (sscanf(line, "%5s AND %5s -> %5s", a, b, c) == 3)
-      insertNode(a, AND, b, c);
+      insert_node(a, AND, b, c);
     else if (sscanf(line, "%5s OR %5s -> %5s", a, b, c) == 3)
-      insertNode(a, OR, b, c);
+      insert_node(a, OR, b, c);
     else if (sscanf(line, "%5s LSHIFT %5s -> %5s", a, b, c) == 3)
-      insertNode(a, LSHIFT, b, c);
+      insert_node(a, LSHIFT, b, c);
     else if (sscanf(line, "%5s RSHIFT %5s -> %5s", a, b, c) == 3)
-      insertNode(a, RSHIFT, b, c);
+      insert_node(a, RSHIFT, b, c);
     else
       die("input error: %s", line);
   }

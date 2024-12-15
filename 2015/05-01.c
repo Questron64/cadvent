@@ -2,10 +2,10 @@
 
 int main() {
   C *line = NULL;
-  Z lineSize = 0;
+  Z line_size = 0;
 
   I nice = 0;
-  while (fgetline(stdin, &line, &lineSize)) {
+  while (fgetline(stdin, &line, &line_size)) {
     trim(line);
 
     I vowels = 0;

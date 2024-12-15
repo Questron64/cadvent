@@ -2,7 +2,7 @@
 #include "07-common.c"
 
 I main() {
-  loadNet();
+  load_net();
   net['b'] = (Node){VALUE, {{NUMBER, 46065}, {NUMBER, 0}}};
 
   solve('a');

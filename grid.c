@@ -1,47 +1,46 @@
-// An infinitely-expanding grid of integers
+// an infinitely-expanding grid of integers
 typedef struct {
   Z size;
   V *data;
 } Grid;
 
-Grid freeGrid(Grid *this) {
+Grid free_grid(Grid *this) {
   if (this) {
     alloc(this->data, 0);
   }
   return (Grid){0};
 }
 
-I *indexGrid(Grid *this, I x, I y) {
+I *index_grid(Grid *this, I x, I y) {
   I rx = (I)this->size / 2 + x;
   I ry = (I)this->size / 2 + y;
 
-  // If the requested cell is not on the current grid then
+  // if the requested cell is not on the current grid then
   // we need to resize the grid and copy the data over
   {
-    Z newSize = this->size;
-    while (rx < 0 || ry < 0 ||                  //
-           rx >= (I)newSize || ry >= (I)newSize //
+    Z new_size = this->size;
+    while (rx < 0 || ry < 0 ||                    //
+           rx >= (I)new_size || ry >= (I)new_size //
     ) {
-      if (newSize == 0) {
-        newSize = 128;
-        rx = newSize / 2;
-        ry = newSize / 2;
+      if (new_size == 0) {
+        new_size = 128;
+        rx = new_size / 2;
+        ry = new_size / 2;
       } else {
-        newSize = newSize * 2;
-        rx += newSize / 4;
-        ry += newSize / 4;
+        new_size = new_size * 2;
+        rx += new_size / 4;
+        ry += new_size / 4;
       }
     }
 
-    if (newSize != this->size) {
+    if (new_size != this->size) {
       // clang-format really hates this line
-      I(*n) // it doesn't know about pointer-to-array
-      [newSize][newSize] =
-        alloc(NULL, sizeof(I[newSize][newSize]));
+      I(*n)
+      [new_size][new_size] = alloc(NULL, sizeof(I[new_size][new_size]));
 
       if (this->size != 0) {
         I(*t)[this->size][this->size] = this->data;
-        Z off = (newSize - this->size) / 2;
+        Z off = (new_size - this->size) / 2;
         for (Z y = 0; y < this->size; y++) {
           memcpy(                //
             &(*n)[off + y][off], //
@@ -52,11 +51,11 @@ I *indexGrid(Grid *this, I x, I y) {
 
       this->data = alloc(this->data, 0);
       this->data = n;
-      this->size = newSize;
+      this->size = new_size;
     }
   }
 
-  // Index the grid
+  // index the grid
   I(*g)[this->size][this->size] = this->data;
   return &(*g)[ry][rx];
 }

@@ -1,6 +1,6 @@
-I findHash(CC *key, CC *hashPrefix) {
+I find_hash(CC *key, CC *hash_prefix) {
   Z len = strlen(key);
-  Z pfxLen = strlen(hashPrefix);
+  Z pfx_len = strlen(hash_prefix);
 
   C *buf = alloc(NULL, len + 12); // INT_MAX plus nul
   strcpy(buf, key);
@@ -10,7 +10,7 @@ I findHash(CC *key, CC *hashPrefix) {
     sprintf(&buf[len], "%d", i);
     C hash[MD5_DIGEST_STRING_LENGTH];
     MD5StringHex(buf, hash);
-    if(!strncmp(hash, hashPrefix, pfxLen))
+    if (!strncmp(hash, hash_prefix, pfx_len))
       break;
   }
 
@@ -21,11 +21,10 @@ I findHash(CC *key, CC *hashPrefix) {
   return i;
 }
 
-C *readInput(FILE *f) {
+C *read_input(FILE *f) {
   C *input = NULL;
   if (fgetline(f, &input, NULL) == 0)
     die("input error");
   trim(input);
   return input;
 }
-

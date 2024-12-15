@@ -3,7 +3,7 @@
 #include "04-common.c"
 
 I main() {
-  C *input = readInput(stdin);
-  printf("%d\n", findHash(input, "00000"));
+  C *input = read_input(stdin);
+  printf("%d\n", find_hash(input, "00000"));
   input = alloc(input, 0);
 }

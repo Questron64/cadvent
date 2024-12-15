@@ -4,8 +4,8 @@
 I main() {
   Grid g = {0};
   I x = 0, y = 0;
-  I numHouses = 1;
-  (*indexGrid(&g, 0, 0))++;
+  I num_houses = 1;
+  (*index_grid(&g, 0, 0))++;
 
   for (I c; c = fgetc(stdin), c != EOF;) {
     switch (c) {
@@ -19,12 +19,12 @@ I main() {
     default: die("input error");
     }
 
-    I *house = indexGrid(&g, x, y);
+    I *house = index_grid(&g, x, y);
     if (!*house)
-      numHouses++;
+      num_houses++;
     (*house)++;
   }
 
-  printf("%d\n", numHouses);
-  g = freeGrid(&g);
+  printf("%d\n", num_houses);
+  g = free_grid(&g);
 }
