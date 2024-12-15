@@ -1,11 +1,13 @@
 // A smorgasbord of utility functions, type names and headers
 #include <ctype.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 typedef bool B;
 typedef char C;
@@ -19,8 +21,21 @@ typedef unsigned U;
 typedef unsigned int UI;
 typedef const int CI;
 typedef unsigned const int UCI;
+typedef long L;
+typedef unsigned long UL;
+typedef const long CL;
+typedef unsigned const long UCL;
 typedef void V;
 typedef const void CV;
+
+typedef int8_t I8;
+typedef uint8_t U8;
+typedef int16_t I16;
+typedef uint16_t U16;
+typedef int32_t I32;
+typedef uint32_t U32;
+typedef int64_t I64;
+typedef uint64_t U64;
 
 _Noreturn V die(CC *fmt, ...) {
   va_list args;

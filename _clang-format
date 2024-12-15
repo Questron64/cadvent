@@ -1,5 +1,5 @@
 ---
-ColumnLimit: 65
+ColumnLimit: 80
 ContinuationIndentWidth: 2
 AlignAfterOpenBracket: AlwaysBreak
 BinPackArguments: true
