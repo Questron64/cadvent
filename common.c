@@ -83,6 +83,20 @@ I mini(I a, I b) {
   return b;
 }
 
+I maxi(I a, I b) {
+  if (a > b)
+    return a;
+  return b;
+}
+
+I signi(I a) {
+  if (a < 0)
+    return -1;
+  else if(a > 0)
+    return 1;
+  return 0;
+}
+
 V swapi(I *a, I *b) {
   I c = *a;
   *a = *b;
