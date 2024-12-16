@@ -3,7 +3,7 @@
 
 I main() {
   C *line = NULL;
-  if(!fgetline(stdin, &line, 0))
+  if (!fgetline(stdin, &line, 0))
     die("input error");
   trim(line);
 

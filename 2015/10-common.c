@@ -1,7 +1,7 @@
 I look_and_say(C *in, Z in_len, I n) {
   if (in_len == 0)
     in_len = strlen(in);
-  Z out_len = in_len * 10;
+  Z out_len = in_len + in_len / 2;
   C *out = alloc(0, out_len);
 
   I o = 0;
@@ -13,7 +13,7 @@ I look_and_say(C *in, Z in_len, I n) {
 
     // how many bytes needed?
     I len = digits(run) + 2; // including nul
-    if(o + len >= out_len) {
+    if (o + len >= out_len) {
       out_len *= 2;
       out = alloc(out, out_len);
     }

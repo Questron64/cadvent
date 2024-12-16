@@ -89,7 +89,7 @@ I popcount(U x) {
 }
 
 // get the number of characters in the ASCII representation of i
-I digits(I i) { 
+I digits(I i) {
   I d;
   if (i == 0)
     d = 1;
