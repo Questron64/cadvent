@@ -52,24 +52,22 @@ _Noreturn V die(CC *fmt, ...) {
 //
 // dies on allocation error
 //
+// note that allocated memory is zeroes, but realloced
+// memory is not
+//
 // to malloc call foo = alloc(0, size)
 // to realloc call foo = alloc(foo, new_size)
 // to free call foo = alloc(foo, 0)
 V *alloc(V *ptr, Z size) {
-  // free
-  if (size == 0) {
+  if (size == 0) { // free
     free(ptr);
     return NULL;
-
-    // calloc
-  } else if (ptr == NULL) {
+  } else if (ptr == NULL) { // calloc
     V *new = calloc(1, size);
     if (!new)
       die("memory error");
     return new;
-
-    // realloc
-  } else {
+  } else { // realloc
     V *new = realloc(ptr, size);
     if (!new)
       die("memory error");
