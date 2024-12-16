@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -85,6 +86,18 @@ I popcount(U x) {
     count += !!(x & m);
   return count;
 #endif
+}
+
+// get the number of characters in the ASCII representation of i
+I digits(I i) { 
+  I d;
+  if (i == 0)
+    d = 1;
+  else
+    d = (I)floor(log10(abs(i))) + 1;
+  if (i < 0)
+    d++;
+  return d;
 }
 
 // return a new array of integers from a to b exclusive
