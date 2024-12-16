@@ -1,11 +1,7 @@
 // a hash table with arbitrary keys and values
 //
-// this can be used as a hash table, a set, or a multiset
-//
 // tables can optionally have string keys or values
-// if a table has a string key or value then it duplicates
-// the string, removing from the table gives you ownership
-// so don't forget to free them
+// if a table has a string key or value then inters the string
 
 // hashing functions
 // note that these cannot return 0
@@ -54,19 +50,37 @@ typedef struct {
     C value[CAP][VAL ? VAL : sizeof(C *)];                                     \
   }
 
-// initialize a new table with capacity of 0
-Table table_init(Z key_size, Z value_size) {
-  return (Table){
+// forward declarations (these functions call each other)
+B table_get(Table *this, V *key, Z *out_idx, CV **out_key, V **out_value);
+V table_reserve(Table *this, Z capacity);
+
+// getters (never touch _underscore members outside of this file)
+Z table_key_size(Table *this) { return this->_key_size; }
+Z table_value_size(Table *this) { return this->_value_size; }
+Z table_size(Table *this) { return this->_size; }
+Z table_capacity(Table *this) { return this->_capacity; }
+U32 (*table_func(Table *this))(CC *, Z) { return this->_func; }
+
+// initialize a new table and call table_reserve
+Table table_init(Z key_size, Z value_size, Z reserve) {
+  Table this = {
     ._key_size = key_size,
     ._value_size = value_size,
     ._func = key_size ? fnv32 : fnv32_string,
   };
+  table_reserve(&this, reserve);
+  return this;
 }
 
-// insert a key or key/value into a table
+// insert a key/value into a table
+// return true if insertion was successful
 //
-// value is ignored for sets
-Z table_insert(Table *this, V *key, V *value) {
+// set out_value to the value, either the value just inserted, or
+// the existing value
+B table_insert(Table *this, V *key, V *value, Z *out_idx, V **out_value) {
+  if (table_get(this, key, 0, 0, out_value))
+    return false;
+
   typedef TABLE_ENTRIES(this->_capacity, this->_key_size, this->_value_size)
     TableEntries;
   TableEntries *entries = this->_entries;
@@ -79,26 +93,28 @@ Z table_insert(Table *this, V *key, V *value) {
        tries < this->_capacity;                     //
        tries++, idx = (idx + 1) % this->_capacity)  //
   {
-    if (entries->hash[idx] != 0)
-      continue;
+    if (entries->hash[idx] == 0) {
+      entries->count[hash % this->_capacity]++;
+      entries->hash[idx] = hash;
 
-    entries->count[hash % this->_capacity]++;
-    entries->hash[idx] = hash;
+      if (this->_key_size == 0)
+        *(C **)entries->key[idx] = strdup(key);
+      else
+        memcpy(entries->key[idx], key, this->_key_size);
 
-    if (this->_key_size == 0) {
-      C *tmp = strdup(key);
-      memcpy(entries->key[idx], &tmp, sizeof(C *));
-    } else
-      memcpy(entries->key[idx], key, this->_key_size);
+      if (this->_value_size == 0)
+        *(C **)entries->value[idx] = strdup(value);
+      else
+        memcpy(entries->value[idx], value, this->_value_size);
 
-    if (this->_value_size == 0) {
-      C *tmp = strdup(value);
-      memcpy(entries->value[idx], &tmp, sizeof(C *));
-    } else
-      memcpy(entries->value[idx], value, this->_value_size);
+      this->_size++;
 
-    this->_size++;
-    return (Z)idx;
+      if (out_idx)
+        *out_idx = idx;
+      if (out_value)
+        *out_value = entries->value[idx];
+      return true;
+    }
   }
 
   // should be unreachable
@@ -107,12 +123,18 @@ Z table_insert(Table *this, V *key, V *value) {
 
 // reserve entries for a table
 //
-// this can be a very expensive operation on tables with entries
+// this can be a very expensive operation
 // you should reserve more than you need rather than resize
+// larger tables reduce load factor at the cost of memory
 //
 // it is an error to shrink a table to a capacity less than its size
+// except a size of 0
 //
 // reserve to a capacity of 0 will free all memory used by the table
+//
+// reserve to a capacity of _capacity will defrag the table
+// table fragmentation occurs on tables with high load factor and frequent
+// deletions, causing entries to be further from their intended position
 V table_reserve(Table *this, Z capacity) {
   typedef TABLE_ENTRIES(this->_capacity, this->_key_size, this->_value_size)
     TableEntries;
@@ -123,18 +145,11 @@ V table_reserve(Table *this, Z capacity) {
     // free string keys/values
     if (this->_key_size == 0 || this->_value_size == 0) {
       for (Z i = 0; i < this->_capacity; i++) {
-        if (entries->hash[i] == 0)
-          continue;
-
-        if (this->_key_size == 0) {
-          C *tmp;
-          memcpy(&tmp, entries->key[i], sizeof(C *));
-          alloc(tmp, 0);
-        }
-        if (this->_value_size == 0) {
-          C *tmp;
-          memcpy(&tmp, entries->value[i], sizeof(C *));
-          alloc(tmp, 0);
+        if (entries->hash[i] != 0) {
+          if (this->_key_size == 0)
+            *(V **)entries->key[i] = alloc(*(V **)entries->key[i], 0);
+          if (this->_value_size == 0)
+            *(V **)entries->value[i] = alloc(*(V **)entries->value[i], 0);
         }
       }
     }
@@ -157,7 +172,7 @@ V table_reserve(Table *this, Z capacity) {
   // iterate the old table and insert into new
   for (Z i = 0; i < this->_capacity; i++)
     if (entries->hash[i])
-      table_insert(&new, entries->key[i], entries->value[i]);
+      table_insert(&new, entries->key[i], entries->value[i], 0, 0);
 
   this->_entries = alloc(this->_entries, 0);
   *this = new;
@@ -169,27 +184,32 @@ B table_get(Table *this, V *key, Z *out_idx, CV **out_key, V **out_value) {
   TableEntries *entries = this->_entries;
 
   U32 hash = this->_func(key, this->_key_size);
-  if (entries->count[hash % this->_capacity] == 0)
+  U32 hash_round = hash % this->_capacity;
+  if (entries->count[hash_round] == 0)
     return false;
 
-  for (U32 idx = hash % this->_capacity, tries = 0; //
-       tries < this->_capacity;                     //
-       tries++, idx = (idx + 1) % this->_capacity)  //
+  // start at hash_round and look forward for the real match
+  //
+  // in a table with a low load factor this should be the first
+  // entry or just a few entries away from the start
+  for (U32 idx = hash % this->_capacity, tries = 0, hits = 0;         //
+       hits <= entries->count[hash_round] && tries < this->_capacity; //
+       tries++, idx = (idx + 1) % this->_capacity)                    //
   {
-    if (entries->hash[idx] != hash)
-      continue;
-
-    if (out_idx)
-      *out_idx = (Z)idx;
-    if (out_key)
-      *out_key = entries->key[idx];
-    if (out_value)
-      *out_value = entries->value[idx];
-
-    return true;
+    if (hash_round == entries->hash[idx] % this->_capacity)
+      hits++;
+    if (entries->hash[idx] == hash) {
+      if (out_idx)
+        *out_idx = (Z)idx;
+      if (out_key)
+        *out_key = entries->key[idx];
+      if (out_value)
+        *out_value = entries->value[idx];
+      return true;
+    }
   }
 
-  // unreachable?
+  // not found
   return false;
 }
 
@@ -208,7 +228,7 @@ B table_get_by_idx(Table *this, Z idx, CV **out_key, V **out_value) {
   return true;
 }
 
-// delete an entry by index, do not free interred strings
+// delete an entry by index, free interred strings
 V table_delete_by_idx(Table *this, Z idx) {
   typedef TABLE_ENTRIES(this->_capacity, this->_key_size, this->_value_size)
     TableEntries;
@@ -217,6 +237,10 @@ V table_delete_by_idx(Table *this, Z idx) {
   if (entries->hash[idx] == 0 || idx >= this->_capacity)
     die("invalid idx");
 
+  if (this->_key_size == 0)
+    *(V **)entries->key[idx] = alloc(*(V **)entries->key[idx], 0);
+  if (this->_value_size == 0)
+    *(V **)entries->value[idx] = alloc(*(V **)entries->value[idx], 0);
   entries->count[entries->hash[idx] % this->_capacity]--;
   entries->hash[idx] = 0;
 }

@@ -87,6 +87,15 @@ I popcount(U x) {
 #endif
 }
 
+// return a new array of integers from a to b exclusive
+// a must be < b
+I *seqi(I a, I b) {
+  I *arr = alloc(0, sizeof(I) * (b - a));
+  for (I i = a; i < b; i++)
+    arr[i] = a + i;
+  return arr;
+}
+
 // return true if string starts with prefix
 B startswith(CC *string, CC *prefix) {
   return !strncmp(string, prefix, strlen(prefix));
