@@ -101,7 +101,7 @@ B table_insert(Table *this, V *key, Z key_len, V *value, Z *out_idx, V **out_val
       entries->hash[idx] = hash;
 
       if (this->_key_size == 0)
-        *(C **)entries->key[idx] = strdup(key);
+        *(C **)entries->key[idx] = strndup(key, key_len);
       else
         memcpy(entries->key[idx], key, this->_key_size);
 
