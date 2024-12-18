@@ -46,11 +46,11 @@ I read_input() {
       die("input error");
 
     I *from_idx;
-    if (table_insert(&index, from, &num_cities, 0, (V **)&from_idx))
+    if (table_insert(&index, from, 0, &num_cities, 0, (V **)&from_idx))
       num_cities++;
 
     I *to_idx;
-    if (table_insert(&index, to, &num_cities, 0, (V **)&to_idx))
+    if (table_insert(&index, to, 0, &num_cities, 0, (V **)&to_idx))
       num_cities++;
 
     // bounds check on map, should never happen

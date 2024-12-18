@@ -77,9 +77,12 @@ Table table_init(Z key_size, Z value_size, Z reserve) {
 //
 // set out_value to the value, either the value just inserted, or
 // the existing value
-B table_insert(Table *this, V *key, V *value, Z *out_idx, V **out_value) {
+B table_insert(Table *this, V *key, Z key_len, V *value, Z *out_idx, V **out_value) {
   if (table_get(this, key, 0, 0, out_value))
     return false;
+
+  if(this->_key_size == 0 && key_len == 0)
+    key_len = strlen(key);
 
   typedef TABLE_ENTRIES(this->_capacity, this->_key_size, this->_value_size)
     TableEntries;
@@ -172,7 +175,7 @@ V table_reserve(Table *this, Z capacity) {
   // iterate the old table and insert into new
   for (Z i = 0; i < this->_capacity; i++)
     if (entries->hash[i])
-      table_insert(&new, entries->key[i], entries->value[i], 0, 0);
+      table_insert(&new, entries->key[i], 0, entries->value[i], 0, 0);
 
   this->_entries = alloc(this->_entries, 0);
   *this = new;

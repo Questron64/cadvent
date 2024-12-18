@@ -30,6 +30,9 @@ typedef unsigned const long UCL;
 typedef void V;
 typedef const void CV;
 
+typedef float F;
+typedef double D;
+
 typedef int8_t I8;
 typedef uint8_t U8;
 typedef int16_t I16;
@@ -220,6 +223,25 @@ Z fgetline(FILE *f, C **buf, Z *buf_size) {
       *buf = alloc(*buf, *buf_size);
     }
   }
+}
+
+Z fgetfile(FILE *f, C **buf, Z *buf_size) {
+  if(*buf_size == 0) {
+    *buf_size = 512;
+    *buf = alloc(*buf, *buf_size);
+  }
+
+  Z idx = 0;
+  while(!feof(f)) {
+    if (idx == *buf_size) {
+      *buf_size *= 2;
+      *buf = alloc(*buf, *buf_size);
+    }
+
+    idx += fread(&(*buf)[idx], 1, *buf_size - idx, f);
+  }
+
+  return idx;
 }
 
 // remove whitespace from the end of a string
