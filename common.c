@@ -42,6 +42,12 @@ typedef uint32_t U32;
 typedef int64_t I64;
 typedef uint64_t U64;
 
+typedef struct {
+  Z len;  // length of the string
+  Z cap;  // capacity of the buffer
+  C *str; // pointer to first char (may be NULL if cap or len is 0)
+} String, S;
+
 // print message to console and kill the program
 _Noreturn V die(CC *fmt, ...) {
   va_list args;
@@ -177,6 +183,33 @@ I cmpi(CV *a, CV *b) {
   return *a_ - *b_;
 }
 
+// return the next line of FILE f
+// reuse the buffer in str
+//
+// return empty string on end of file or error
+// check status of FILE f for more info
+B nextline(FILE *f, S *s) {
+  if(s->cap == 0) {
+    s->cap = 80;
+    s->str = alloc(0, 80);
+  }
+  s->len = 0;
+
+  while(1) {
+    if(!fgets(s->str, s->cap - s->len, f))
+      return s->len > 0;
+    s->len += strlen(&s->str[s->len]);
+
+    if(s->str[s->len - 1] == '\r' || s->str[s->len - 1] == '\n')
+      return s->len > 0;
+
+    if(s->len == s->cap - 1) {
+      s->cap *= 2;
+      s->str = alloc(s->str, s->cap);
+    }
+  }
+}
+
 // get a line of input from a file
 // reads complete lines and allocates as necessary
 // returns the length of the line read
@@ -253,4 +286,20 @@ Z trim(C *str) {
     i--;
   }
   return i;
+}
+
+V string_trim(S *s) {
+  while(s->len > 0 && isspace(s->str[s->len - 1])) {
+    s->str[s->len - 1] = 0;
+    s->len--;
+  }
+}
+
+V string_reserve(S *s, Z cap) {
+  s->str = alloc(s->str, cap);
+  if(cap > 0 && s->len > cap - 1) {
+    s->str[cap - 1] = 0;
+    s->len = cap - 2;
+  }
+  s->cap = cap;
 }
