@@ -33,12 +33,13 @@ typedef struct {
   Z idx;     // index into buffer
 } JSON;
 
-JSON json_parser_init(CC *buf, Z buf_len);
+JSONValue json_parse_buffer(CC *buf, Z buf_len);
+JSONValue json_parse_file(FILE *f);
 
 V json_free(JSONValue *v);
 V json_decode_string(C *str);
 
-B json_parse(JSON *p, JSONValue *val);
+B json_json(JSON *p, JSONValue *val);
 B json_value(JSON *p, JSONValue *val);
 B json_object(JSON *p, JSONValue *val);
 B json_member(JSON *p, B comma, JSONValue *val);
@@ -62,13 +63,6 @@ B json_sign(JSON *p);
 B json_ws(JSON *p);
 B json_match(CC *str, JSON *p);
 B json_match_any(CC *c, JSON *p);
-
-JSON json_parser_init(CC *buf, Z buf_len) {
-  return (JSON){
-    .buf = buf,
-    .buf_len = buf_len,
-  };
-}
 
 // recursively free all objects under v, but not v
 V json_free(JSONValue *v) {
@@ -145,9 +139,46 @@ V json_print(JSONValue *v, I indent) {
   }
 }
 
-V json_decode_string(C *str) {}
+JSONValue json_parse_file(FILE *f) {
+  Z buf_size = 0;
+  C *buf = NULL;
+  Z file_len = fgetfile(f, &buf, &buf_size);
+  JSONValue val = json_parse_buffer(buf, file_len);
+  buf = alloc(buf, 0);
+  return val;
+}
 
-B json_parse(JSON *p, JSONValue *val) { //
+JSONValue json_parse_buffer(CC *buf, Z buf_len) {
+  JSONValue root = {0};
+  if (!json_json(&(JSON){buf, buf_len, 0}, &root))
+    root = (JSONValue){0};
+  return root;
+}
+
+V json_decode_string(C *str) {
+  CC decode[256] = {
+    ['"'] = '"',  ['\\'] = '\\', ['/'] = '/',  ['b'] = '\b',
+    ['f'] = '\f', ['n'] = '\n',  ['r'] = '\r', ['t'] = '\t',
+  };
+
+  C *o = str;
+  for (C *i = str; *i;) {
+    if (*i != '\\') {
+      *o = *i;
+      i++;
+      o++;
+    } else if (*i >= 0 && decode[(I)*i] != 0) {
+      *o = decode[(I)*i];
+      o++;
+      i += 2;
+    } else if (i[1] == 'u') {
+      die("unicode escape not supported");
+    }
+  }
+  *o = 0;
+}
+
+B json_json(JSON *p, JSONValue *val) { //
   return json_element(p, val);
 }
 
@@ -175,9 +206,9 @@ B json_object(JSON *p, JSONValue *val) {
   if (!json_match("{", p))
     goto fail;
 
-  if(!json_member(p, false, val ? &object : NULL))
+  if (!json_member(p, false, val ? &object : NULL))
     goto fail;
-  while(json_member(p, true, val ? &object : NULL))
+  while (json_member(p, true, val ? &object : NULL))
     ;
 
   json_ws(p);
@@ -189,7 +220,7 @@ B json_object(JSON *p, JSONValue *val) {
   return true;
 
 fail:
-  if(val)
+  if (val)
     json_free(&object);
   p->idx = back;
   return false;
@@ -199,7 +230,7 @@ B json_member(JSON *p, B comma, JSONValue *object) {
   Z back = p->idx;
 
   json_ws(p);
-  if(comma && !json_match(",", p))
+  if (comma && !json_match(",", p))
     goto fail;
   json_ws(p);
 
@@ -218,7 +249,7 @@ B json_member(JSON *p, B comma, JSONValue *object) {
 
   if (object)
     table_insert(
-      &object->object, (V*)&p->buf[key_start], key_end - key_start, &val, NULL,
+      &object->object, (V *)&p->buf[key_start], key_end - key_start, &val, NULL,
       NULL);
 
   return true;
@@ -298,6 +329,7 @@ B json_string(JSON *p, JSONValue *val) {
   ) {
     if (val) {
       C *str = strndup(&p->buf[back + 1], p->idx - back - 2);
+      json_decode_string(str);
       if (str == NULL)
         die("memory error");
       json_decode_string(str);

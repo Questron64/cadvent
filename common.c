@@ -52,8 +52,7 @@ _Noreturn V die(CC *fmt, ...) {
   exit(EXIT_FAILURE);
 }
 
-// one alloc function to rule them and
-// in the darkness bind them
+// one alloc function for alloc, realloc and free
 //
 // dies on allocation error
 //
@@ -227,13 +226,13 @@ Z fgetline(FILE *f, C **buf, Z *buf_size) {
 }
 
 Z fgetfile(FILE *f, C **buf, Z *buf_size) {
-  if(*buf_size == 0) {
+  if (*buf_size == 0) {
     *buf_size = 512;
     *buf = alloc(*buf, *buf_size);
   }
 
   Z idx = 0;
-  while(!feof(f)) {
+  while (!feof(f)) {
     if (idx == *buf_size) {
       *buf_size *= 2;
       *buf = alloc(*buf, *buf_size);
