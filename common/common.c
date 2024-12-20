@@ -1,52 +1,4 @@
-// a smorgasbord of utility functions, type names and headers
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <math.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-// i like my types like i like my Danny DeVitos
-typedef bool B;
-typedef char C;
-typedef const char CC;
-typedef unsigned char UC;
-typedef unsigned const char UCC;
-typedef size_t Z;
-typedef const size_t CZ;
-typedef int I;
-typedef unsigned U;
-typedef unsigned int UI;
-typedef const int CI;
-typedef unsigned const int UCI;
-typedef long L;
-typedef unsigned long UL;
-typedef const long CL;
-typedef unsigned const long UCL;
-typedef void V;
-typedef const void CV;
-
-typedef float F;
-typedef double D;
-
-typedef int8_t I8;
-typedef uint8_t U8;
-typedef int16_t I16;
-typedef uint16_t U16;
-typedef int32_t I32;
-typedef uint32_t U32;
-typedef int64_t I64;
-typedef uint64_t U64;
-
-typedef struct {
-  Z len;  // length of the string
-  Z cap;  // capacity of the buffer
-  C *str; // pointer to first char (may be NULL if cap or len is 0)
-} String, S;
+#include "common.h"
 
 // print message to console and kill the program
 _Noreturn V die(CC *fmt, ...) {
@@ -189,21 +141,21 @@ I cmpi(CV *a, CV *b) {
 // return empty string on end of file or error
 // check status of FILE f for more info
 B nextline(FILE *f, S *s) {
-  if(s->cap == 0) {
+  if (s->cap == 0) {
     s->cap = 80;
     s->str = alloc(0, 80);
   }
   s->len = 0;
 
-  while(1) {
-    if(!fgets(s->str, s->cap - s->len, f))
+  while (1) {
+    if (!fgets(s->str, s->cap - s->len, f))
       return s->len > 0;
     s->len += strlen(&s->str[s->len]);
 
-    if(s->str[s->len - 1] == '\r' || s->str[s->len - 1] == '\n')
+    if (s->str[s->len - 1] == '\r' || s->str[s->len - 1] == '\n')
       return s->len > 0;
 
-    if(s->len == s->cap - 1) {
+    if (s->len == s->cap - 1) {
       s->cap *= 2;
       s->str = alloc(s->str, s->cap);
     }
@@ -289,7 +241,7 @@ Z trim(C *str) {
 }
 
 V string_trim(S *s) {
-  while(s->len > 0 && isspace(s->str[s->len - 1])) {
+  while (s->len > 0 && isspace(s->str[s->len - 1])) {
     s->str[s->len - 1] = 0;
     s->len--;
   }
@@ -297,7 +249,7 @@ V string_trim(S *s) {
 
 V string_reserve(S *s, Z cap) {
   s->str = alloc(s->str, cap);
-  if(cap > 0 && s->len > cap - 1) {
+  if (cap > 0 && s->len > cap - 1) {
     s->str[cap - 1] = 0;
     s->len = cap - 2;
   }

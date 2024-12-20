@@ -1,7 +1,9 @@
-#include "../common.c"
-#include "../table.c"
+#include "../common.h"
+#include "../table.h"
 
+#include "../common.c"
 #include "../json.c"
+#include "../table.c"
 
 D accumulate(JSONValue *v, D n) {
   switch (v->type) {
@@ -27,7 +29,7 @@ D accumulate(JSONValue *v, D n) {
 
 I main() {
   JSONValue root = json_parse_file(stdin);
-  if(root.type == JSON_INVALID)
+  if (root.type == JSON_INVALID)
     die("invalid json");
   printf("%f\n", accumulate(&root, 0));
   json_free(&root);

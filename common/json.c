@@ -1,31 +1,4 @@
-typedef enum {
-  JSON_INVALID,
-  JSON_STRING,
-  JSON_NUMBER,
-  JSON_OBJECT,
-  JSON_ARRAY,
-  JSON_BOOLEAN,
-  JSON_NULL,
-} JSONType;
-
-typedef struct JSONValue JSONValue;
-typedef struct JSONArray JSONArray;
-
-struct JSONArray {
-  Z size;
-  JSONValue *values;
-};
-
-struct JSONValue {
-  JSONType type;
-  union {
-    C *string;
-    D number;
-    Table object;
-    JSONArray array;
-    B boolean;
-  };
-};
+#include "json.h"
 
 typedef struct {
   CC *buf;   // buffer being parsed
@@ -33,36 +6,32 @@ typedef struct {
   Z idx;     // index into buffer
 } JSON;
 
-JSONValue json_parse_buffer(CC *buf, Z buf_len);
-JSONValue json_parse_file(FILE *f);
+static V json_decode_string(C *str);
 
-V json_free(JSONValue *v);
-V json_decode_string(C *str);
-
-B json_json(JSON *p, JSONValue *val);
-B json_value(JSON *p, JSONValue *val);
-B json_object(JSON *p, JSONValue *val);
-B json_member(JSON *p, B comma, JSONValue *val);
-B json_array(JSON *p, JSONValue *val);
-B json_element(JSON *p, JSONValue *val);
-B json_string(JSON *p, JSONValue *val);
-B json_characters(JSON *p);
-B json_character(JSON *p);
-B json_escape(JSON *p);
-B json_hex(JSON *p);
-B json_number(JSON *p, JSONValue *val);
-B json_boolean(JSON *p, JSONValue *val);
-B json_null(JSON *p, JSONValue *val);
-B json_integer(JSON *p);
-B json_digits(JSON *p);
-B json_digit(JSON *p);
-B json_onenine(JSON *p);
-B json_fraction(JSON *p);
-B json_exponent(JSON *p);
-B json_sign(JSON *p);
-B json_ws(JSON *p);
-B json_match(CC *str, JSON *p);
-B json_match_any(CC *c, JSON *p);
+static B json_json(JSON *p, JSONValue *val);
+static B json_value(JSON *p, JSONValue *val);
+static B json_object(JSON *p, JSONValue *val);
+static B json_member(JSON *p, B comma, JSONValue *val);
+static B json_array(JSON *p, JSONValue *val);
+static B json_element(JSON *p, JSONValue *val);
+static B json_string(JSON *p, JSONValue *val);
+static B json_characters(JSON *p);
+static B json_character(JSON *p);
+static B json_escape(JSON *p);
+static B json_hex(JSON *p);
+static B json_number(JSON *p, JSONValue *val);
+static B json_boolean(JSON *p, JSONValue *val);
+static B json_null(JSON *p, JSONValue *val);
+static B json_integer(JSON *p);
+static B json_digits(JSON *p);
+static B json_digit(JSON *p);
+static B json_onenine(JSON *p);
+static B json_fraction(JSON *p);
+static B json_exponent(JSON *p);
+static B json_sign(JSON *p);
+static B json_ws(JSON *p);
+static B json_match(CC *str, JSON *p);
+static B json_match_any(CC *c, JSON *p);
 
 // recursively free all objects under v, but not v
 V json_free(JSONValue *v) {
@@ -95,7 +64,7 @@ V json_free(JSONValue *v) {
   *v = (JSONValue){JSON_INVALID};
 }
 
-V json_print(JSONValue *v, I indent) {
+static V json_print(JSONValue *v, I indent) {
   CC *spaces =                                           //
     "                                                  " //
     "                                                  " //
@@ -155,7 +124,7 @@ JSONValue json_parse_buffer(CC *buf, Z buf_len) {
   return root;
 }
 
-V json_decode_string(C *str) {
+static V json_decode_string(C *str) {
   CC decode[256] = {
     ['"'] = '"',  ['\\'] = '\\', ['/'] = '/',  ['b'] = '\b',
     ['f'] = '\f', ['n'] = '\n',  ['r'] = '\r', ['t'] = '\t',
@@ -178,11 +147,11 @@ V json_decode_string(C *str) {
   *o = 0;
 }
 
-B json_json(JSON *p, JSONValue *val) { //
+static B json_json(JSON *p, JSONValue *val) { //
   return json_element(p, val);
 }
 
-B json_value(JSON *p, JSONValue *val) {
+static B json_value(JSON *p, JSONValue *val) {
   return                    //
     json_object(p, val) ||  //
     json_array(p, val) ||   //
@@ -192,7 +161,7 @@ B json_value(JSON *p, JSONValue *val) {
     json_null(p, val);      //
 }
 
-B json_object(JSON *p, JSONValue *val) {
+static B json_object(JSON *p, JSONValue *val) {
   Z back = p->idx;
 
   JSONValue object = {0};
@@ -226,7 +195,7 @@ fail:
   return false;
 }
 
-B json_member(JSON *p, B comma, JSONValue *object) {
+static B json_member(JSON *p, B comma, JSONValue *object) {
   Z back = p->idx;
 
   json_ws(p);
@@ -259,7 +228,7 @@ fail:
   return false;
 }
 
-B json_array(JSON *p, JSONValue *val) {
+static B json_array(JSON *p, JSONValue *val) {
   Z back = p->idx;
   if (                    //
     json_match("[", p) && //
@@ -306,7 +275,7 @@ fail:
   return false;
 }
 
-B json_element(JSON *p, JSONValue *val) {
+static B json_element(JSON *p, JSONValue *val) {
   Z back = p->idx;
   if (                    //
     json_ws(p) &&         //
@@ -320,7 +289,7 @@ B json_element(JSON *p, JSONValue *val) {
   return false;
 }
 
-B json_string(JSON *p, JSONValue *val) {
+static B json_string(JSON *p, JSONValue *val) {
   Z back = p->idx;
   if (                     //
     json_match("\"", p) && //
@@ -342,13 +311,13 @@ B json_string(JSON *p, JSONValue *val) {
   return false;
 }
 
-B json_characters(JSON *p) {
+static B json_characters(JSON *p) {
   while (json_character(p))
     ;
   return true;
 }
 
-B json_character(JSON *p) {
+static B json_character(JSON *p) {
   if (
     p->idx < p->buf_len &&    //
     p->buf[p->idx] >= 0x20 && //
@@ -369,7 +338,7 @@ B json_character(JSON *p) {
   return false;
 }
 
-B json_escape(JSON *p) {
+static B json_escape(JSON *p) {
   Z back = p->idx;
   if (                                 //
     json_match_any("\"\\/bfnrt", p) || //
@@ -385,9 +354,11 @@ B json_escape(JSON *p) {
   return false;
 }
 
-B json_hex(JSON *p) { return json_match_any("0123456789abcdefABCDEF", p); }
+static B json_hex(JSON *p) {
+  return json_match_any("0123456789abcdefABCDEF", p);
+}
 
-B json_number(JSON *p, JSONValue *val) {
+static B json_number(JSON *p, JSONValue *val) {
   Z back = p->idx;
   if (                  //
     json_integer(p) &&  //
@@ -410,7 +381,7 @@ B json_number(JSON *p, JSONValue *val) {
   return false;
 }
 
-B json_boolean(JSON *p, JSONValue *val) {
+static B json_boolean(JSON *p, JSONValue *val) {
   if (json_match("true", p)) {
     if (val)
       *val = (JSONValue){JSON_BOOLEAN, .boolean = true};
@@ -423,7 +394,7 @@ B json_boolean(JSON *p, JSONValue *val) {
   return false;
 }
 
-B json_null(JSON *p, JSONValue *val) {
+static B json_null(JSON *p, JSONValue *val) {
   if (json_match("null", p)) {
     if (val)
       *val = (JSONValue){JSON_NULL};
@@ -432,7 +403,7 @@ B json_null(JSON *p, JSONValue *val) {
   return false;
 }
 
-B json_integer(JSON *p) {
+static B json_integer(JSON *p) {
   Z back = p->idx;
   if (                              //
     (json_match("-", p) || true) && //
@@ -444,17 +415,17 @@ B json_integer(JSON *p) {
   return false;
 }
 
-B json_digits(JSON *p) {
+static B json_digits(JSON *p) {
   Z back = p->idx;
   while (json_digit(p))
     ;
   return p->idx > back;
 }
 
-B json_digit(JSON *p) { return json_match_any("0123456789", p); }
-B json_onenine(JSON *p) { return json_match_any("123456789", p); }
+static B json_digit(JSON *p) { return json_match_any("0123456789", p); }
+static B json_onenine(JSON *p) { return json_match_any("123456789", p); }
 
-B json_fraction(JSON *p) {
+static B json_fraction(JSON *p) {
   Z back = p->idx;
   if (                    //
     json_match(".", p) && //
@@ -466,7 +437,7 @@ B json_fraction(JSON *p) {
   return true;
 }
 
-B json_exponent(JSON *p) {
+static B json_exponent(JSON *p) {
   Z back = p->idx;
   if (                         //
     json_match_any("eE", p) && //
@@ -479,15 +450,15 @@ B json_exponent(JSON *p) {
   return true;
 }
 
-B json_sign(JSON *p) { return json_match_any("+-", p); }
+static B json_sign(JSON *p) { return json_match_any("+-", p); }
 
-B json_ws(JSON *p) {
+static B json_ws(JSON *p) {
   while (json_match_any("\x20\x0a\x0d\x09", p))
     ;
   return true;
 }
 
-B json_match(CC *str, JSON *p) {
+static B json_match(CC *str, JSON *p) {
   Z len = strlen(str);
   if (p->idx + len < p->buf_len && !strncmp(&p->buf[p->idx], str, len)) {
     p->idx += len;
@@ -496,7 +467,7 @@ B json_match(CC *str, JSON *p) {
   return false;
 }
 
-B json_match_any(CC *c, JSON *p) {
+static B json_match_any(CC *c, JSON *p) {
   if (p->idx < p->buf_len && strchr(c, p->buf[p->idx])) {
     (p->idx)++;
     return true;

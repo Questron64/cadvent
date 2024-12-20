@@ -2,6 +2,7 @@
 //
 // tables can optionally have string keys or values
 // if a table has a string key or value then inters the string
+#include "table.h"
 
 // hashing functions
 // note that these cannot return 0
@@ -32,16 +33,6 @@ U32 fnv32_string(CC *s, Z _size) {
   return h;
 }
 
-typedef struct {
-  Z _key_size;   // size of key in bytes (if 0, keys are strings)
-  Z _value_size; // size of value in bytes (if 0, values are strings)
-  Z _size;       // number of entries
-  Z _capacity;   // max entries
-  V *_entries;   // the actual table
-
-  U32 (*_func)(CC *, Z); // the hash function
-} Table;
-
 #define TABLE_ENTRIES(CAP, KEY, VAL)                                           \
   struct {                                                                     \
     U32 count[CAP];                                                            \
@@ -49,17 +40,6 @@ typedef struct {
     C key[CAP][KEY ? KEY : sizeof(C *)];                                       \
     C value[CAP][VAL ? VAL : sizeof(C *)];                                     \
   }
-
-// forward declarations (these functions call each other)
-B table_get(Table *this, V *key, Z *out_idx, CV **out_key, V **out_value);
-V table_reserve(Table *this, Z capacity);
-
-// getters (never touch _underscore members outside of this file)
-Z table_key_size(Table *this) { return this->_key_size; }
-Z table_value_size(Table *this) { return this->_value_size; }
-Z table_size(Table *this) { return this->_size; }
-Z table_capacity(Table *this) { return this->_capacity; }
-U32 (*table_func(Table *this))(CC *, Z) { return this->_func; }
 
 // initialize a new table and call table_reserve
 Table table_init(Z key_size, Z value_size, Z reserve) {
@@ -77,11 +57,12 @@ Table table_init(Z key_size, Z value_size, Z reserve) {
 //
 // set out_value to the value, either the value just inserted, or
 // the existing value
-B table_insert(Table *this, V *key, Z key_len, V *value, Z *out_idx, V **out_value) {
+B table_insert(
+  Table *this, V *key, Z key_len, V *value, Z *out_idx, V **out_value) {
   if (table_get(this, key, 0, 0, out_value))
     return false;
 
-  if(this->_key_size == 0 && key_len == 0)
+  if (this->_key_size == 0 && key_len == 0)
     key_len = strlen(key);
 
   typedef TABLE_ENTRIES(this->_capacity, this->_key_size, this->_value_size)

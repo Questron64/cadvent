@@ -1,8 +1,4 @@
-// an infinitely-expanding grid of integers
-typedef struct {
-  Z size;
-  V *data;
-} Grid;
+#include "grid.h"
 
 Grid free_grid(Grid *this) {
   if (this) {
