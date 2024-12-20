@@ -35,5 +35,6 @@ struct JSONValue {
 JSONValue json_parse_buffer(CC *buf, Z buf_len);
 JSONValue json_parse_file(FILE *f);
 V json_free(JSONValue *v);
+V json_print(JSONValue *v, I indent);
 
 #endif

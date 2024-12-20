@@ -1,4 +1,5 @@
-#include "../common.c"
+#include "common.h"
+
 #include "11-common.c"
 
 I main() {
@@ -9,6 +10,6 @@ I main() {
 
   do {
     increment_password(pass_len, pass, pass_len - 1);
-  } while(!is_password_valid(pass_len, pass));
+  } while (!is_password_valid(pass_len, pass));
   printf("%s\n", pass);
 }

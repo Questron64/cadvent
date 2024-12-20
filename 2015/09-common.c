@@ -1,4 +1,4 @@
-#include "../table.c"
+#include "table.h"
 #define MAX_CITIES 20
 
 I map[MAX_CITIES][MAX_CITIES] = {0};

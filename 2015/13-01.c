@@ -1,5 +1,5 @@
-#include "../common.c"
-#include "../table.c"
+#include "common.h"
+#include "table.h"
 #define MAX_GUESTS 100
 
 I solve(I (*map)[MAX_GUESTS][MAX_GUESTS], I *idxs, Z num, Z i) {

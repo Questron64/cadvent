@@ -1,5 +1,6 @@
-#include "../common.c"
-#include "../md5.c"
+#include "common.h"
+#include "md5.h"
+
 #include "04-common.c"
 
 I main() {

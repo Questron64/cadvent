@@ -25,7 +25,7 @@ static B json_null(JSON *p, JSONValue *val);
 static B json_integer(JSON *p);
 static B json_digits(JSON *p);
 static B json_digit(JSON *p);
-static B json_onenine(JSON *p);
+// static B json_onenine(JSON *p);
 static B json_fraction(JSON *p);
 static B json_exponent(JSON *p);
 static B json_sign(JSON *p);
@@ -64,7 +64,7 @@ V json_free(JSONValue *v) {
   *v = (JSONValue){JSON_INVALID};
 }
 
-static V json_print(JSONValue *v, I indent) {
+V json_print(JSONValue *v, I indent) {
   CC *spaces =                                           //
     "                                                  " //
     "                                                  " //
@@ -423,7 +423,7 @@ static B json_digits(JSON *p) {
 }
 
 static B json_digit(JSON *p) { return json_match_any("0123456789", p); }
-static B json_onenine(JSON *p) { return json_match_any("123456789", p); }
+// static B json_onenine(JSON *p) { return json_match_any("123456789", p); }
 
 static B json_fraction(JSON *p) {
   Z back = p->idx;

@@ -1,4 +1,4 @@
-#include "../common.c"
+#include "common.h"
 
 I main(I argc, C *argv[]) {
   I floor = 0;

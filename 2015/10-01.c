@@ -1,4 +1,5 @@
-#include "../common.c"
+#include "common.h"
+
 #include "10-common.c"
 
 I main() {

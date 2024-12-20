@@ -1,4 +1,4 @@
-#include "../common.c"
+#include "common.h"
 
 I main() {
   C *line = NULL;

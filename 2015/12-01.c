@@ -1,9 +1,6 @@
-#include "../common.h"
-#include "../table.h"
-
-#include "../common.c"
-#include "../json.c"
-#include "../table.c"
+#include "common.h"
+#include "json.h"
+#include "table.h"
 
 D accumulate(JSONValue *v, D n) {
   switch (v->type) {

@@ -1,5 +1,5 @@
-#include "../common.c"
-#include "../grid.c"
+#include "common.h"
+#include "grid.h"
 
 I main() {
   Grid g = {0};

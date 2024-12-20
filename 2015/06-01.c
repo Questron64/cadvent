@@ -1,4 +1,5 @@
-#include "../common.c"
+#include "common.h"
+
 #include "06-common.c"
 
 I grid[1000][1000];
